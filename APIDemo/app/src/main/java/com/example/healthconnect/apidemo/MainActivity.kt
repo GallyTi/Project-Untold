@@ -19,10 +19,9 @@ import androidx.health.connect.client.records.StepsRecord
 import androidx.health.connect.client.records.TotalCaloriesBurnedRecord
 import androidx.lifecycle.lifecycleScope
 import kotlinx.coroutines.launch
+import java.time.Duration
 import java.time.Instant
 import java.time.LocalDate
-import java.time.LocalDateTime
-import java.time.LocalTime
 import java.time.ZoneId
 
 class MainActivity : AppCompatActivity() {
@@ -32,11 +31,8 @@ class MainActivity : AppCompatActivity() {
 
     private val healthConnectPermissions = setOf(
         HealthPermission.getReadPermission(StepsRecord::class),
-        HealthPermission.getWritePermission(StepsRecord::class),
         HealthPermission.getReadPermission(SleepSessionRecord::class),
-        HealthPermission.getWritePermission(SleepSessionRecord::class),
-        HealthPermission.getReadPermission(TotalCaloriesBurnedRecord::class),
-        HealthPermission.getWritePermission(TotalCaloriesBurnedRecord::class)
+        HealthPermission.getReadPermission(TotalCaloriesBurnedRecord::class)
     )
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -64,20 +60,25 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun createRequestPermissionsObject() {
-        requestPermissions = registerForActivityResult(ActivityResultContracts.RequestMultiplePermissions()) { permissions ->
-            lifecycleScope.launch {
-                if (healthConnectManager.hasAllPermissions()) {
-                    Log.d("MainActivity", "All Health Connect permissions granted.")
-                    runOnUiThread {
-                        Toast.makeText(this@MainActivity, "Health Connect permissions granted", Toast.LENGTH_SHORT).show()
+        requestPermissions =
+            registerForActivityResult(ActivityResultContracts.RequestMultiplePermissions()) { permissions ->
+                lifecycleScope.launch {
+                    if (healthConnectManager.hasAllPermissions()) {
+                        Log.d("MainActivity", "All Health Connect permissions granted.")
+                        runOnUiThread {
+                            Toast.makeText(
+                                this@MainActivity,
+                                "Health Connect permissions granted",
+                                Toast.LENGTH_SHORT
+                            ).show()
+                        }
+                        readData()
+                    } else {
+                        Log.d("MainActivity", "Health Connect permissions not granted.")
+                        showPermissionSettingsDialog()
                     }
-                    readData()
-                } else {
-                    Log.d("MainActivity", "Health Connect permissions not granted.")
-                    showPermissionSettingsDialog()
                 }
             }
-        }
     }
 
     private fun showPermissionSettingsDialog() {
@@ -103,14 +104,12 @@ class MainActivity : AppCompatActivity() {
                     return@launch
                 }
 
-                val startTime = LocalDate.now().atStartOfDay(ZoneId.systemDefault()).toInstant()
+                val zoneId = ZoneId.systemDefault()
+                val today = LocalDate.now(zoneId)
+                val startTime = today.atStartOfDay(zoneId).toInstant()
                 val endTime = Instant.now()
 
-                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE) {
-                    readDataForAndroid14AndAbove(startTime, endTime)
-                } else {
-                    readDataForAndroid13AndBelow(startTime, endTime)
-                }
+                readDataForAndroid14AndAbove(startTime, endTime)
             } catch (e: Exception) {
                 Log.e("MainActivity", "Error reading data", e)
             }
@@ -120,24 +119,33 @@ class MainActivity : AppCompatActivity() {
     private suspend fun readDataForAndroid14AndAbove(startTime: Instant, endTime: Instant) {
         Log.d("MainActivity", "Reading data from $startTime to $endTime")
 
+        val zoneId = ZoneId.systemDefault()
+        val today = LocalDate.now(zoneId)
+
+        // Steps for today
         val stepsRecords = healthConnectManager.readStepsRecords(startTime, endTime)
         val totalSteps = stepsRecords.sumOf { it.count }
         Log.d("MainActivity", "Total Steps: $totalSteps")
 
+        // Calories for today
         val calorieRecords = healthConnectManager.readTotalCaloriesBurnedRecords(startTime, endTime)
         val totalCalories = calorieRecords.sumOf { it.energy.inKilocalories }
         Log.d("MainActivity", "Total Calories: $totalCalories")
 
-        val sleepStart = LocalDateTime.of(LocalDate.now().minusDays(1), LocalTime.of(18, 0)).atZone(ZoneId.systemDefault()).toInstant()
-        val sleepScore = healthConnectManager.getSleepScoreForPeriod(sleepStart, endTime)
-        Log.d("MainActivity", "Sleep Score: $sleepScore")
+        // Sleep Data for today
+        val sleepData = healthConnectManager.getSleepDataForDay(today)
+        Log.d("MainActivity", "Sleep Data for today: $sleepData")
 
-        displayData("Steps taken today: $totalSteps\nCalories burned: $totalCalories\nSleep Score: $sleepScore")
-    }
-
-    private suspend fun readDataForAndroid13AndBelow(startTime: Instant, endTime: Instant) {
-        // Použitie rovnakých funkcií pre Android 13 a nižšie, pretože `Legacy` funkcie už nemáme
-        readDataForAndroid14AndAbove(startTime, endTime)
+        displayData(
+            "Steps taken today: $totalSteps\n" +
+                    "Calories burned today: $totalCalories\n" +
+                    "Total Sleep Time: ${sleepData.totalSleepTime} minutes\n" +
+                    "Sleep Score: ${sleepData.sleepScore}\n" +
+                    "Deep Sleep: ${sleepData.deepSleepTime} minutes\n" +
+                    "REM Sleep: ${sleepData.remSleepTime} minutes\n" +
+                    "Light Sleep: ${sleepData.lightSleepTime} minutes\n" +
+                    "Awake Time: ${sleepData.awakeTime} minutes"
+        )
     }
 
     private fun displayData(data: String) {
@@ -149,14 +157,14 @@ class MainActivity : AppCompatActivity() {
     private fun startForegroundService() {
         val serviceIntent = Intent(this, HealthForegroundService::class.java)
         lifecycleScope.launch {
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE) {
-                if (healthConnectManager.hasAllPermissions()) {
+            if (healthConnectManager.hasAllPermissions()) {
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
                     startForegroundService(serviceIntent)
                 } else {
-                    requestPermissions.launch(healthConnectPermissions.toTypedArray())
+                    startService(serviceIntent)
                 }
             } else {
-                startForegroundService(serviceIntent)
+                requestPermissions.launch(healthConnectPermissions.toTypedArray())
             }
         }
     }

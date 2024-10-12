@@ -21,6 +21,7 @@ appcompat = "1.6.1"
 lifecycleRuntimeKtxVersion = "2.4.1"
 logbackClassic = "1.2.3"
 nanohttpd = "2.3.1"
+roomKtx = "2.6.1"
 
 [libraries]
 androidx-appcompat-v131 = { module = "androidx.appcompat:appcompat", version.ref = "androidxAppcompat" }
@@ -54,6 +55,7 @@ ktor-server-core = { module = "io.ktor:ktor-server-core", version.ref = "ktorSer
 ktor-server-netty = { module = "io.ktor:ktor-server-netty", version.ref = "ktorServerNetty" }
 logback-classic = { module = "ch.qos.logback:logback-classic", version.ref = "logbackClassic" }
 nanohttpd = { module = "org.nanohttpd:nanohttpd", version.ref = "nanohttpd" }
+androidx-room-ktx = { group = "androidx.room", name = "room-ktx", version.ref = "roomKtx" }
 
 [plugins]
 androidApplication = { id = "com.android.application", version.ref = "agp" }
