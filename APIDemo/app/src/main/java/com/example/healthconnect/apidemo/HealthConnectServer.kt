@@ -6,13 +6,39 @@ import java.time.Duration
 import java.time.Instant
 import java.time.LocalDate
 import java.time.ZoneId
+import com.auth0.jwt.JWT
+import com.auth0.jwt.algorithms.Algorithm
+import com.auth0.jwt.interfaces.DecodedJWT
 
 class HealthConnectServer(
     private val healthConnectManager: HealthConnectManager,
     port: Int = 8082
 ) : NanoHTTPD("0.0.0.0", port) {
 
+    // Secret pre JWT - v reále to maj bezpečne uložené, nie hardkódnuté
+    private val secret = "MySuperSecretKey"
+    private val algorithm = Algorithm.HMAC256(secret)
+
     override fun serve(session: IHTTPSession?): Response {
+        // Overenie autorizácie
+        val authHeader = session?.headers?.get("authorization")
+        if (authHeader.isNullOrEmpty() || !authHeader.startsWith("Bearer ")) {
+            return newFixedLengthResponse(
+                Response.Status.UNAUTHORIZED,
+                MIME_PLAINTEXT,
+                "Missing or invalid Authorization header"
+            )
+        }
+
+        val token = authHeader.removePrefix("Bearer ").trim()
+        if (!validateToken(token)) {
+            return newFixedLengthResponse(
+                Response.Status.FORBIDDEN,
+                MIME_PLAINTEXT,
+                "Invalid or expired token"
+            )
+        }
+
         return runBlocking {
             when (session?.uri) {
                 "/steps" -> serveSteps()
@@ -115,5 +141,19 @@ class HealthConnectServer(
         }
 
         return newFixedLengthResponse(Response.Status.OK, "application/json", responseJson)
+    }
+
+    private fun validateToken(token: String): Boolean {
+        return try {
+            val verifier = JWT.require(algorithm).build()
+            val decoded: DecodedJWT = verifier.verify(token)
+            // Tu môžeš skontrolovať expiráciu, claimy atď.
+            decoded.expiresAt?.let {
+                if (it.before(java.util.Date())) return false
+            }
+            true
+        } catch (e: Exception) {
+            false
+        }
     }
 }

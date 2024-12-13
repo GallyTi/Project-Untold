@@ -47,3 +47,5 @@ google-services.json
 
 # Android Profiling
 *.hprof
+
+/project-untold-backend/node_modules

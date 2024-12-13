@@ -11,6 +11,8 @@ import android.app.job.JobScheduler
 import android.content.ComponentName
 import android.content.Context
 import android.content.Intent
+import android.net.nsd.NsdManager
+import android.net.nsd.NsdServiceInfo
 import android.os.Build
 import android.os.IBinder
 import android.os.SystemClock
@@ -32,6 +34,8 @@ class HealthForegroundService : Service() {
     }
 
     private lateinit var healthConnectManager: HealthConnectManager
+    private lateinit var nsdManager: NsdManager
+    private var serviceInfo: NsdServiceInfo? = null
 
     override fun onCreate() {
         super.onCreate()
@@ -47,6 +51,10 @@ class HealthForegroundService : Service() {
 
         // Spusti NanoHTTPD server
         startNanoHttpServer()
+
+        // Inzerovanie služby cez mDNS
+        nsdManager = getSystemService(Context.NSD_SERVICE) as NsdManager
+        registerService(8082)
 
         // Naplánovanie JobScheduleru
         scheduleJob()
@@ -108,5 +116,32 @@ class HealthForegroundService : Service() {
 
         val jobScheduler = getSystemService(Context.JOB_SCHEDULER_SERVICE) as JobScheduler
         jobScheduler.schedule(jobInfo)
+    }
+
+    private fun registerService(port: Int) {
+        val service = NsdServiceInfo().apply {
+            serviceName = "MyHealthConnectService"
+            serviceType = "_http._tcp."
+            setPort(port)
+        }
+
+        nsdManager.registerService(service, NsdManager.PROTOCOL_DNS_SD, object : NsdManager.RegistrationListener {
+            override fun onServiceRegistered(NsdServiceInfo: NsdServiceInfo) {
+                serviceInfo = NsdServiceInfo
+                Log.d(TAG, "Service registered: ${NsdServiceInfo.serviceName}")
+            }
+
+            override fun onRegistrationFailed(serviceInfo: NsdServiceInfo, errorCode: Int) {
+                Log.e(TAG, "Service registration failed: $errorCode")
+            }
+
+            override fun onServiceUnregistered(serviceInfo: NsdServiceInfo) {
+                Log.d(TAG, "Service Unregistered")
+            }
+
+            override fun onUnregistrationFailed(serviceInfo: NsdServiceInfo, errorCode: Int) {
+                Log.e(TAG, "Service unregistration failed: $errorCode")
+            }
+        })
     }
 }

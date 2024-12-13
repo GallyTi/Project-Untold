@@ -1,0 +1,245 @@
+1. Vzťahy medzi entitami v databáze
+Entity a ich vzťahy
+Hráč (Player)
+
+PlayerID (PK)
+Meno (Name)
+Email
+Pohlavie (Gender)
+Vek (Age)
+EOS_ID (ak používaš EOS)
+Zoznam Postáv (vzťah 1
+k entite Postava)
+Postava (Character)
+
+CharacterID (PK)
+PlayerID (FK na Hráča)
+Meno Postavy (CharacterName)
+Typ Postavy (CharacterType)
+Úroveň Postavy (CharacterLevel)
+Skúsenostné body Postavy (CharacterXP)
+Štatistiky (vzťah 1:1 k entite Štatistiky)
+Inventár (vzťah 1
+k entite Inventár)
+Štatistiky (Stats)
+
+StatsID (PK)
+CharacterID (FK na Postavu)
+Sila (Strength)
+Stamina (Stamina)
+Životy (Health)
+Inteligencia (Intelligence)
+Mana (Mana)
+Aktivita (Activity)
+
+ActivityID (PK)
+PlayerID (FK na Hráča)
+Dátum (Date)
+Počet Krokov (StepCount)
+Kalórie (Calories)
+Spánkové Skóre (SleepScore)
+Celkový Spánok (TotalSleepTime)
+Hlboký Spánok (DeepSleepTime)
+REM Spánok (RemSleepTime)
+Ľahký Spánok (LightSleepTime)
+Čas Bdenia (AwakeTime)
+Súhrn Aktivity (ActivitySummary)
+
+SummaryID (PK)
+PlayerID (FK na Hráča)
+Obdobie (Period)
+Celkové Krokov (TotalSteps)
+Celkové Kalórie (TotalCalories)
+Priemerné Spánkové Skóre (AverageSleepScore)
+Ďalšie súhrnné štatistiky
+Inteligencia Otázka (IntelligenceQuestion)
+
+QuestionID (PK)
+Otázka (QuestionText)
+Možnosti (Options)
+Správna Odpoveď (CorrectAnswer)
+Bodová Hodnota (PointValue)
+Kategória (Category)
+Odpovede Hráča (PlayerAnswer)
+
+AnswerID (PK)
+PlayerID (FK na Hráča)
+QuestionID (FK na Otázku)
+Je Správna (IsCorrect)
+Dátum Času (AnsweredAt)
+Predmet (Item)
+
+ItemID (PK)
+Názov (Name)
+Popis (Description)
+Typ (Type)
+Hodnota (Value)
+Buffy/Debuffy (vzťah N
+k entite BuffDebuff)
+Buff/Debuff (BuffDebuff)
+
+BuffDebuffID (PK)
+Názov (Name)
+Popis (Description)
+Typ (Buff alebo Debuff)
+Účinok (Effect)
+Cieľový Atribút (TargetAttribute)
+Hodnota Zmeny (ValueChange)
+Percentuálna Zmena (PercentageChange)
+Trvanie (Duration)
+Inventár (Inventory)
+
+InventoryID (PK)
+CharacterID (FK na Postavu)
+ItemID (FK na Predmet)
+Množstvo (Quantity)
+Úloha (Quest)
+
+QuestID (PK)
+Názov (Name)
+Popis (Description)
+Typ (Type)
+Stav (Status)
+Odmeny (Rewards)
+Podmienky (Conditions)
+Achievement (Achievement)
+
+AchievementID (PK)
+Názov (Name)
+Popis (Description)
+Podmienky (Conditions)
+Odmeny (Rewards)
+Záznam Achievementu (PlayerAchievement)
+
+PlayerAchievementID (PK)
+PlayerID (FK na Hráča)
+AchievementID (FK na Achievement)
+Dátum Získania (DateObtained)
+
+
+
+
+
+
+Hráč má mnoho Postáv (1)
+
+Postava má jednu Štatistiku (1:1)
+
+Postava má viacero Predmetov v Inventári (1)
+
+Predmety môžu mať viacero Buffov/Debuffov (N)
+
+Hráč má viacero Aktivít (1)
+
+Hráč má viacero Súhrnov Aktivít (1)
+
+Hráč odpovedá na viacero Otázok (1)
+
+Otázka môže byť zodpovedaná viacerými Hráčmi (N)
+
+Hráč má viacero Achievementov (1)
+
+Hráč má viacero Úloh (1)
+
+
+
+
+Pre uľahčenie vývoja a komunikácie odporúčam používať nástroj ako Swagger alebo Postman na dokumentovanie API endpointov.
+
+Príklad štruktúry API:
+
+Autentifikácia
+
+POST /auth/register - Registrácia hráča
+POST /auth/login - Prihlásenie hráča
+Hráč
+
+GET /players/{playerId} - Získanie informácií o hráčovi
+PUT /players/{playerId} - Aktualizácia informácií o hráčovi
+Postava
+
+GET /characters - Získanie zoznamu postáv hráča
+POST /characters - Vytvorenie novej postavy
+GET /characters/{characterId} - Detail postavy
+PUT /characters/{characterId} - Aktualizácia postavy
+Aktivity
+
+POST /activities - Odoslanie aktivity
+GET /activities - Získanie aktivít hráča
+Inteligencia Otázky
+
+GET /questions/random - Získanie náhodnej otázky
+POST /questions/answer - Odoslanie odpovede
+Inventár
+
+GET /inventory - Získanie inventára postavy
+POST /inventory/use-item - Použitie predmetu
+Úlohy a Achievementy
+
+GET /quests - Získanie úloh
+GET /achievements - Získanie achievementov
+Príklad dokumentácie pre endpoint:
+
+POST /auth/register
+
+Popis: Registrácia nového hráča.
+Parametre:
+name: string, povinné
+email: string, povinné
+password: string, povinné
+gender: string, voliteľné (Muž, Žena, Neuvádza)
+age: integer, voliteľné
+Odpoveď:
+201 Created: Hráč úspešne registrovaný.
+400 Bad Request: Chýbajúce alebo nesprávne parametre.
+409 Conflict: Email už existuje.
+2.2. Databázová Dokumentácia
+Vytvor podrobnú dokumentáciu pre každú entitu, vrátane:
+
+Názvu tabuľky
+Popisu každého stĺpca (atribútu)
+Typu dát
+Obmedzení (PRIMARY KEY, FOREIGN KEY, NOT NULL, UNIQUE)
+Príklad pre tabuľku Player:
+
+Názov stĺpca	Typ dát	Obmedzenia	Popis
+PlayerID	INTEGER	PRIMARY KEY, AUTO INCR.	Jedinečný identifikátor
+Name	VARCHAR(50)	NOT NULL	Meno hráča
+Email	VARCHAR(100)	NOT NULL, UNIQUE	Email hráča
+Gender	ENUM	DEFAULT 'Neuvádza'	Pohlavie hráča
+Age	INTEGER		Vek hráča
+EOS_ID	VARCHAR(100)	UNIQUE	Identifikátor z EOS
+
+
+
+
+
+Prípad EOS:
+3. Integrácia s Epic Online Services (EOS)
+3.1. Výhody použitia EOS
+Cross-platform autentifikácia: Jednoduché prihlásenie hráčov na rôznych platformách.
+Bezpečnosť: Nemusíš spravovať heslá a citlivé údaje.
+Ďalšie funkcie: Matchmaking, leaderboards, voice chat atď.
+3.2. Postup integrácie
+Registrácia na Epic Developer Portal
+
+Vytvor si účet a nový projekt.
+Získaj potrebné kľúče a konfigurácie.
+Implementácia v Unreal Engine
+
+Nainštaluj EOS SDK pre Unreal Engine.
+Implementuj prihlásenie hráča cez EOS.
+Integrácia na backend strane
+
+Backend bude prijímať EOS_ID alebo autentifikačné tokeny od klienta.
+Overenie tokenov pomocou EOS API.
+Synchronizácia údajov
+
+Ukladaj EOS_ID v tabuľke Player pre prepojenie s dátami v tvojej databáze.
+3.3. Overenie hráča na backend strane
+Pri každom API požiadavku:
+
+Klient posiela EOS autentifikačný token.
+Backend overuje token pomocou EOS API.
+Backend získa EOS_ID hráča.
+Backend vyhľadá alebo vytvorí záznam hráča v databáze pomocou EOS_ID.
