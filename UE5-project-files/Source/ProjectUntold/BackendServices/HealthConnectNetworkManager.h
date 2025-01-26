@@ -42,7 +42,7 @@ public:
 	void UpdatePlayerStamina(int32 TotalSteps);
 
 private:
-	FString BackendBaseUrl = TEXT("http://192.168.56.1:3000");
+	FString BackendBaseUrl = TEXT("http://localhost:3000");
 
 	// Member variables
 	FString JWTToken;

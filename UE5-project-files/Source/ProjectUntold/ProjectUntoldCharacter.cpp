@@ -10,6 +10,7 @@
 #include "EnhancedInputComponent.h"
 #include "EnhancedInputSubsystems.h"
 #include "InputActionValue.h"
+#include "Items/ItemDropActor.h"
 
 DEFINE_LOG_CATEGORY(LogTemplateCharacter);
 
@@ -91,6 +92,7 @@ void AProjectUntoldCharacter::SetupPlayerInputComponent(UInputComponent* PlayerI
 	{
 		UE_LOG(LogTemplateCharacter, Error, TEXT("'%s' Failed to find an Enhanced Input component! This template is built to use the Enhanced Input system. If you intend to use the legacy system, then you will need to update this C++ file."), *GetNameSafe(this));
 	}
+	PlayerInputComponent->BindAction("Pickup", IE_Pressed, this, &AProjectUntoldCharacter::TryPickup);
 }
 
 void AProjectUntoldCharacter::Move(const FInputActionValue& Value)
@@ -126,5 +128,39 @@ void AProjectUntoldCharacter::Look(const FInputActionValue& Value)
 		// add yaw and pitch input to controller
 		AddControllerYawInput(LookAxisVector.X);
 		AddControllerPitchInput(LookAxisVector.Y);
+	}
+}
+
+void AProjectUntoldCharacter::TryPickup()
+{
+	// Napríklad spravíme krátky line trace pred postavou (pol metra - 100 cm)
+	FVector Start = FollowCamera->GetComponentLocation();
+	FVector Forward = FollowCamera->GetForwardVector();
+	FVector End = Start + (Forward * 200.f); // 2 metre pred kamerou
+
+	FHitResult HitResult;
+	FCollisionQueryParams QueryParams;
+	QueryParams.bTraceComplex = false;
+	QueryParams.AddIgnoredActor(this);  // ignoruj seba
+
+	bool bHit = GetWorld()->LineTraceSingleByChannel(HitResult, Start, End, ECC_Visibility, QueryParams);
+	if (bHit)
+	{
+		AItemDropActor* ItemActor = Cast<AItemDropActor>(HitResult.GetActor());
+		if (ItemActor)
+		{
+			UE_LOG(LogTemp, Log, TEXT("TryPickup: Found ItemDropActor = %s"), *ItemActor->GetName());
+
+			// Zavoláme priamo funkciu na iteme
+			ItemActor->PickupItem(this);
+		}
+		else
+		{
+			UE_LOG(LogTemp, Log, TEXT("TryPickup: Hit something that is not an ItemDropActor."));
+		}
+	}
+	else
+	{
+		UE_LOG(LogTemp, Log, TEXT("TryPickup: Nothing in front of the camera."));
 	}
 }

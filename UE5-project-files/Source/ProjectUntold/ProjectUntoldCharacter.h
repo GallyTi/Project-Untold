@@ -44,6 +44,9 @@ class AProjectUntoldCharacter : public ACharacter
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, meta = (AllowPrivateAccess = "true"))
 	UInputAction* LookAction;
 
+	UFUNCTION(BlueprintCallable, Category="Items")
+	void TryPickup();
+
 public:
 	AProjectUntoldCharacter();
 	

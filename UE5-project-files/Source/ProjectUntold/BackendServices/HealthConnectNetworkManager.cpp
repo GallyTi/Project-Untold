@@ -2,7 +2,7 @@
 #include "HttpModule.h"
 #include "Interfaces/IHttpResponse.h"
 #include "pma/TypeDefs.h"
-#include "ProjectUntold/EOS_GameInstance.h"
+#include "../EOS/EOS_GameInstance.h"
 
 UHealthConnectNetworkManager::UHealthConnectNetworkManager()
 {

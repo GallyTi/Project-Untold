@@ -1,23 +1,27 @@
 #include "ProjectUntoldGameMode.h"
 
-#include "EOS_PlayerController.h"
 #include "OnlineSubsystem.h"
 #include "GameFramework/PlayerState.h"
 #include "OnlineSubsystemUtils.h"
+#include "ProjectUntoldPlayerController.h"
+#include "ProjectUntoldPlayerState.h"
 #include "Interfaces/OnlineSessionInterface.h"
 #include "UObject/ConstructorHelpers.h"
 
 AProjectUntoldGameMode::AProjectUntoldGameMode()
 {
-	// Set default pawn class to our Blueprinted character
+	// Nastavíme kontroler
+	PlayerControllerClass = AProjectUntoldPlayerController::StaticClass();
+
+	// Nastavíme PlayerState
+	PlayerStateClass = AProjectUntoldPlayerState::StaticClass();
+
+	// Nastavíme Pawn (Blueprint, atď.)
 	static ConstructorHelpers::FClassFinder<APawn> PlayerPawnBPClass(TEXT("/Game/ThirdPerson/Blueprints/BP_ThirdPersonCharacter"));
-	if (PlayerPawnBPClass.Class != NULL)
+	if (PlayerPawnBPClass.Class != nullptr)
 	{
 		DefaultPawnClass = PlayerPawnBPClass.Class;
 	}
-
-	// Set your custom PlayerController class
-	PlayerControllerClass = AEOS_PlayerController::StaticClass();
 }
 
 // In AProjectUntoldGameMode.cpp
